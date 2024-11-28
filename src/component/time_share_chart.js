@@ -1,42 +1,39 @@
 import React from "react";
 import {
-    Chart as ChartJS,
-    LineElement,
-    BarElement,
-    PointElement,
-    LinearScale,
-    CategoryScale,
-    Title,
-    Tooltip,
-    Legend,
-  } from "chart.js";
-  import { Line, Bar } from "react-chartjs-2";
-  
-  // 注册必要的组件
-  ChartJS.register(
-    LineElement,
-    BarElement,
-    PointElement,
-    LinearScale,
-    CategoryScale,
-    Title,
-    Tooltip,
-    Legend
-  );
+  Chart as ChartJS,
+  LineElement,
+  BarElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
 
-  
+// 注册必要的组件
+ChartJS.register(
+  LineElement,
+  BarElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend
+);
 
-  
 const TimeShareChart = ({ data }) => {
-    const timeLabels = data.map(item => {
-        const date = new Date(item.time);
-        return date.toTimeString().slice(0, 5); // 获取 HH:mm 格式
-      });
-  const prices = data.map(item => item.price);
-  const volumes = data.map(item => item.volume);
+  const timeLabels = data.map((item) => {
+    const date = new Date(item.time * 1000); // 转换为毫秒
+    return date.toISOString().slice(11, 16); // 获取 HH:mm 格式
+  });
+  const prices = data.map((item) => item.close);
+  const volumes = data.map((item) => item.volume);
 
-   // 数据：价格
-   const priceData = {
+  // 数据：价格
+  const priceData = {
     labels: timeLabels,
     datasets: [
       {
@@ -75,6 +72,18 @@ const TimeShareChart = ({ data }) => {
         display: true,
         text: "Stock Price",
       },
+      tooltip: {
+        enabled: true, // 开启tooltips
+        mode: "nearest", // 鼠标接近数据点时显示
+        intersect: false, // 鼠标悬停时显示tooltip
+        callbacks: {
+          label: (tooltipItem) => {
+            const price = tooltipItem.raw;
+            const time = tooltipItem.label;
+            return `Time: ${time}, Price: ${price}`;
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -104,6 +113,18 @@ const TimeShareChart = ({ data }) => {
       title: {
         display: true,
         text: "Volume",
+      },
+      tooltip: {
+        enabled: true, // 开启tooltips
+        mode: "nearest", // 鼠标接近数据点时显示
+        intersect: false, // 鼠标悬停时显示tooltip
+        callbacks: {
+          label: (tooltipItem) => {
+            const volume = tooltipItem.raw;
+            const time = tooltipItem.label;
+            return `Time: ${time}, Volume: ${volume}`;
+          },
+        },
       },
     },
     scales: {

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import TimeShareChart from "./component/time_share_chart";
-
+import axios from "axios";
 const App = () => {
   const [data, setData] = useState([]);
-
+  const stockCode = "sh600628";  // 示例股票代码
+  const serverIp = "127.0.0.1";  // 示例服务器IP地址
   useEffect(() => {
-    // 模拟加载 JSON 文件
-    fetch("/timeshare_data.json")
-      .then(response => response.json())
-      .then(json => setData(json))
-      .catch(error => console.error("Error loading data:", error));
+    axios.get(`http://${serverIp}:5000/time_share_data/${stockCode}`)
+        .then(response => setData(response.data))
+        .catch(error => console.error('Error fetching config:', error));
   }, []);
 
   return (
