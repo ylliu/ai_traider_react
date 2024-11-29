@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import TimeShareChart from "./component/time_share_chart";
 import axios from "axios";
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 const App = () => {
   const [data, setData] = useState([]);
-  const stockCode = "sh600628";  // 示例股票代码
+  const stockCode = "sz300622";  // 示例股票代码
   const serverIp = "127.0.0.1";  // 示例服务器IP地址
   useEffect(() => {
     axios.get(`http://${serverIp}:5000/time_share_data/${stockCode}`)
