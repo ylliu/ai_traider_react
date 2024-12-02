@@ -190,8 +190,8 @@ const TimeShareContainer = () => {
 
   return (
     <div className="container">
-      <div className="row mb-4">
-        <div className="col-md-4">
+      <div className="row mb-3">
+        <div className="col-md-3">
           <div className="input-group">
             <input
               type="text"
@@ -205,7 +205,7 @@ const TimeShareContainer = () => {
             </button>
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-3">
           <div className="input-group">
             <label className="input-group-text" htmlFor="startTime">开始卖出时间</label>
             <input
@@ -217,7 +217,7 @@ const TimeShareContainer = () => {
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-3">
           <div className="input-group">
             <label className="input-group-text" htmlFor="endTime">结束卖出时间</label>
             <input
@@ -229,6 +229,14 @@ const TimeShareContainer = () => {
             />
           </div>
         </div>
+        <div className="col-md-3">
+          <div className="input-group">
+          <button onClick={handleViewChart} className="btn btn-primary">
+              开始训练
+            </button>
+          </div>
+        </div>
+       
       </div>
 
       {chartData.length > 0 && (
