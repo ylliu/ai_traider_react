@@ -116,11 +116,27 @@ const TimeShareChart = ({ data, onSelectRange }) => {
         },
       },
     },
+    onClick: (event) => {
+      const chart = event.chart; // 获取 Chart.js 实例
+      const xAxis = chart.scales.x; // 获取 X 轴
+      const offsetX = event.native.offsetX; // 鼠标点击位置相对于画布的 X 偏移量
+
+      // 根据 X 偏移量映射到时间索引
+      const dataLength = timeLabels.length;
+      const clickedIndex = Math.floor(
+        ((offsetX - xAxis.left) / (xAxis.right - xAxis.left)) * dataLength
+      );
+
+      if (clickedIndex >= 0 && clickedIndex < dataLength) {
+        const clickedTime = timeLabels[clickedIndex]; // 获取时间
+        onSelectRange(clickedTime); // 传递给父组件
+      }
+    },
   };
 
   return (
     <div className="mb-4">
-      <Line data={priceData} options={priceOptions} onClick={onSelectRange} />
+      <Line data={priceData} options={priceOptions} />
       <Bar data={volumeData} options={{ responsive: true }} />
     </div>
   );
@@ -132,12 +148,23 @@ const TimeShareContainer = () => {
   const [startTime, setStartTime] = useState(""); // 开始卖出时间
   const [endTime, setEndTime] = useState(""); // 结束卖出时间
   const [selectingStartTime, setSelectingStartTime] = useState(true); // 标记是否正在选择开始时间
+  
 
   // 处理股票代码输入变化
   const handleStockCodeChange = (e) => {
     setStockCode(e.target.value);
   };
 
+ // 点击分时图时的回调函数
+ const handleSelectRange = (clickedTime) => {
+  if (selectingStartTime) {
+    setStartTime(clickedTime); // 更新开始时间
+    setSelectingStartTime(false); // 切换到选择结束时间
+  } else {
+    setEndTime(clickedTime); // 更新结束时间
+    setSelectingStartTime(true); // 重置为选择开始时间
+  }
+};
   // 处理查看分时图按钮点击
   const handleViewChart = async () => {
     if (!stockCode) {
@@ -158,21 +185,6 @@ const TimeShareContainer = () => {
       console.error("Error fetching data:", error);
       alert("Error fetching data.");
     }
-  };
-
-  // 处理框选时间范围
-  const handleSelectRange = (event) => {
-    const chart = event.chart; // Access chart instance from event
-    const offsetX = event.native.offsetX; // Get the X position of the click
-
-    const data = chart.data.labels; // Get the time labels (X-axis values)
-    console.log('Time labels:', data);
-    
-    const clickedIdx = Math.floor(offsetX / (chart.width / data.length)); // Calculate clicked index
-    const clickedTime = data[clickedIdx]; // Get the time value of the clicked index
-
-    // Set the clicked time as the start time
-    setStartTime(clickedTime); // Update start time on first click
   };
 
 
@@ -221,8 +233,8 @@ const TimeShareContainer = () => {
 
       {chartData.length > 0 && (
         <TimeShareChart
-          data={chartData}
-          onSelectRange={handleSelectRange}
+          data={chartData}  onSelectRange={handleSelectRange}
+         
         />
       )}
     </div>
