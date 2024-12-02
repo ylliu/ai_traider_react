@@ -28,7 +28,7 @@ ChartJS.register(
   ChartAnnotation
 );
 
-const TimeShareChart = ({ data, onSelectRange }) => {
+const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
   const timeLabels = data.map((item) => {
     const date = new Date(item.time * 1000); // 转换为毫秒
     const isoString = date.toISOString(); // 获取 ISO 格式字符串
@@ -73,7 +73,13 @@ const TimeShareChart = ({ data, onSelectRange }) => {
       },
     ],
   };
-
+ 
+  // 在时间点标记卖点
+  const sellPointData = sellPoints.map((sellPointTime) => {
+    const index = timeLabels.findIndex((time) => time === sellPointTime);
+    console.log(sellPointTime, index);  
+    return index !== -1 ? index : null;
+  }).filter(index => index !== null);
   // 配置：价格图表
   const priceOptions = {
     responsive: true,
@@ -97,7 +103,18 @@ const TimeShareChart = ({ data, onSelectRange }) => {
           },
         },
       },
+     // 添加注释来标记卖点，用 "s" 字母作为标识符
+    
+     annotation: {
+      annotations: sellPointData.map((index) => ({
+        type: 'point',
+        xValue: index, // 设置卖点的 x 轴位置
+        yValue: prices[index], // 设置卖点的 y 轴位置
+        backgroundColor: 'blue', // 蓝色背景
+        radius: 3,  // 设置圆形的半径为 5，显示蓝色的小圆点
+      })),
     },
+  },
     scales: {
       y: {
         type: "linear",
@@ -128,6 +145,7 @@ const TimeShareChart = ({ data, onSelectRange }) => {
         },
       },
     },
+    
     onClick: (event) => {
       const chart = event.chart; // 获取 Chart.js 实例
       const xAxis = chart.scales.x; // 获取 X 轴
@@ -162,7 +180,9 @@ const TimeShareContainer = () => {
   const [selectingStartTime, setSelectingStartTime] = useState(true); // 标记是否正在选择开始时间
   const [startTimeInt, setStartTimeInt] = useState(""); // 开始卖出时间
   const [endTimeInt, setEndTimeInt] = useState(""); // 结束卖出时间
-  
+  const [sellPoints, setSellPoints] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);  // 新增：控制按钮状态
+  const [trainingComplete, setTrainingComplete] = useState(false); // 控制训练完成提示框显示
 
   // 处理股票代码输入变化
   const handleStockCodeChange = (e) => {
@@ -187,6 +207,10 @@ const TimeShareContainer = () => {
       alert("Please enter a stock code.");
       return;
     }
+
+    // 清空卖点数据
+    setSellPoints([]);
+    setIsProcessing(false);  // 重置按钮状态
 
     const serverIp = "127.0.0.1";  // 替换为你的服务器IP
     try {
@@ -225,8 +249,7 @@ const TimeShareContainer = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
-        alert(result.message || "Training started successfully.");
+        showTrainingCompleteMessage();
       } else {
         const errorData = await response.json();
         alert(`Failed to start training: ${errorData.error || "Unknown error"}`);
@@ -237,6 +260,36 @@ const TimeShareContainer = () => {
     }
   };
 
+  const handlePlaybackSellPoint = async () => {
+    if (isProcessing) return;  // 如果正在处理，则直接返回
+
+    setIsProcessing(true);  // 设置按钮为“正在计算”
+    const serverIp = '127.0.0.1';
+    try {
+      const response = await fetch(`http://${serverIp}:5000/playback_sell_point/${stockCode}`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSellPoints(data);
+        console.log(sellPoints);
+      } else {
+        alert('Failed to fetch sell points.');
+      }
+    } catch (error) {
+      console.error('Error fetching sell points:', error);
+      alert('Error fetching sell points.');
+    } finally {
+      setIsProcessing(false);  // 恢复按钮状态
+    }
+  };
+
+  const showTrainingCompleteMessage = () => {
+    setTrainingComplete(true);
+    setTimeout(() => {
+      setTrainingComplete(false);
+    }, 1000);  // 3秒后自动消失
+  };
 
   return (
     <div className="container">
@@ -249,6 +302,7 @@ const TimeShareContainer = () => {
               onChange={handleStockCodeChange}
               className="form-control"
               placeholder="Enter stock code"
+              style={{ minWidth: '200px' }}  // 添加这一行
             />
             <button onClick={handleViewChart} className="btn btn-primary">
               查看分时图
@@ -279,19 +333,33 @@ const TimeShareContainer = () => {
             />
           </div>
         </div>
-        <div className="col-md-3">
+        <div className="col-sm-12 col-md-2 d-flex align-items-center">
           <div className="input-group">
-          <button onClick={handleStartTraining} className="btn btn-primary">
-              开始训练
+            <button 
+              onClick={handleStartTraining} 
+              className="btn btn-primary me-2 rounded"
+            >
+           开始训练
+            </button>
+            <button 
+              onClick={handlePlaybackSellPoint} 
+              className="btn btn-success rounded"
+              disabled={isProcessing}  // 禁用按钮
+            >
+              {isProcessing ? "计算卖点中..." : "查看卖点"}
             </button>
           </div>
-        </div>
+      </div>
        
       </div>
-
+      {trainingComplete && (
+        <div className="alert alert-success alert-dismissible fade show" role="alert">
+          训练完成！
+        </div>
+      )}
       {chartData.length > 0 && (
         <TimeShareChart
-          data={chartData}  onSelectRange={handleSelectRange}
+          data={chartData}  onSelectRange={handleSelectRange} sellPoints={sellPoints}
          
         />
       )}
