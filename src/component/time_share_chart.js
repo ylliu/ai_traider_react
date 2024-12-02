@@ -31,7 +31,8 @@ ChartJS.register(
 const TimeShareChart = ({ data, onSelectRange }) => {
   const timeLabels = data.map((item) => {
     const date = new Date(item.time * 1000); // 转换为毫秒
-    return date.toISOString().slice(11, 16); // 获取 HH:mm 格式
+    const isoString = date.toISOString(); // 获取 ISO 格式字符串
+    return isoString.replace("T", " ").slice(0, 19); // 将 'T' 替换为 ' '，并截取前19个字符（保留年月日 时分秒）
   });
 
   const prices = data.map((item) => item.close);
@@ -106,13 +107,24 @@ const TimeShareChart = ({ data, onSelectRange }) => {
           text: "Price",
         },
         ticks: {
-          callback: (value) => `$${value}`, // 显示为货币格式
+          callback: (value) => `${value}`, // 显示为货币格式
         },
       },
       x: {
         title: {
           display: true,
           text: "Time",
+        },
+        ticks: {
+          callback: (value, index) => {
+            // 从 timeLabels 获取完整时间
+            const fullTime = timeLabels[index];
+            if (fullTime) {
+              // 提取 HH:mm 格式
+              return fullTime.slice(11, 16);
+            }
+            return value;
+          },
         },
       },
     },
@@ -148,6 +160,8 @@ const TimeShareContainer = () => {
   const [startTime, setStartTime] = useState(""); // 开始卖出时间
   const [endTime, setEndTime] = useState(""); // 结束卖出时间
   const [selectingStartTime, setSelectingStartTime] = useState(true); // 标记是否正在选择开始时间
+  const [startTimeInt, setStartTimeInt] = useState(""); // 开始卖出时间
+  const [endTimeInt, setEndTimeInt] = useState(""); // 结束卖出时间
   
 
   // 处理股票代码输入变化
@@ -160,9 +174,11 @@ const TimeShareContainer = () => {
   if (selectingStartTime) {
     setStartTime(clickedTime); // 更新开始时间
     setSelectingStartTime(false); // 切换到选择结束时间
+    setStartTimeInt(clickedTime); // 更新开始时间整数
   } else {
     setEndTime(clickedTime); // 更新结束时间
     setSelectingStartTime(true); // 重置为选择开始时间
+    setEndTimeInt(clickedTime); // 更新结束时间整数
   }
 };
   // 处理查看分时图按钮点击
@@ -184,6 +200,40 @@ const TimeShareContainer = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("Error fetching data.");
+    }
+  };
+  const handleStartTraining = async () => {
+    if (!stockCode || !startTimeInt || !endTimeInt) {
+      alert("Please enter stock code, start time, and end time.");
+      return;
+    }
+
+    const payload = {
+      start_time: startTimeInt,
+      end_time: endTimeInt,
+      action: "Sell_Point",
+    };
+
+    const serverIp = "127.0.0.1"; // 替换为你的服务器IP
+    try {
+      const response = await fetch(`http://${serverIp}:5000/start_train/${stockCode}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message || "Training started successfully.");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to start training: ${errorData.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error starting training:", error);
+      alert("Error starting training.");
     }
   };
 
@@ -231,7 +281,7 @@ const TimeShareContainer = () => {
         </div>
         <div className="col-md-3">
           <div className="input-group">
-          <button onClick={handleViewChart} className="btn btn-primary">
+          <button onClick={handleStartTraining} className="btn btn-primary">
               开始训练
             </button>
           </div>
