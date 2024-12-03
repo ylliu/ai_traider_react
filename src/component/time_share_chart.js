@@ -173,7 +173,7 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
 };
 
 const TimeShareContainer = () => {
-  const [stockCode, setStockCode] = useState("sz300622"); // 存储股票代码
+  const [stockCode, setStockCode] = useState("易点天下"); // 存储股票代码
   const [chartData, setChartData] = useState([]);  // 存储图表数据
   const [startTime, setStartTime] = useState(""); // 开始卖出时间
   const [endTime, setEndTime] = useState(""); // 结束卖出时间
@@ -183,7 +183,9 @@ const TimeShareContainer = () => {
   const [sellPoints, setSellPoints] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);  // 新增：控制按钮状态
   const [trainingComplete, setTrainingComplete] = useState(false); // 控制训练完成提示框显示
-
+  const serverIp = "127.0.0.1";  // 替换为你的服务器IP
+  const port = "5001";  // 替换为你的服务器端口
+  const url = `http://${serverIp}:${port}`;
   // 处理股票代码输入变化
   const handleStockCodeChange = (e) => {
     setStockCode(e.target.value);
@@ -211,10 +213,9 @@ const TimeShareContainer = () => {
     // 清空卖点数据
     setSellPoints([]);
     setIsProcessing(false);  // 重置按钮状态
-
-    const serverIp = "127.0.0.1";  // 替换为你的服务器IP
+   
     try {
-      const response = await fetch(`http://${serverIp}:5000/time_share_data/${stockCode}`);
+      const response = await fetch(`${url}/time_share_data/${stockCode}`);
       if (response.ok) {
         const data = await response.json();
         setChartData(data);
@@ -238,9 +239,9 @@ const TimeShareContainer = () => {
       action: "Sell_Point",
     };
 
-    const serverIp = "127.0.0.1"; // 替换为你的服务器IP
+   
     try {
-      const response = await fetch(`http://${serverIp}:5000/start_train/${stockCode}`, {
+      const response = await fetch(`${url}/start_train/${stockCode}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -264,9 +265,9 @@ const TimeShareContainer = () => {
     if (isProcessing) return;  // 如果正在处理，则直接返回
 
     setIsProcessing(true);  // 设置按钮为“正在计算”
-    const serverIp = '127.0.0.1';
+  
     try {
-      const response = await fetch(`http://${serverIp}:5000/playback_sell_point/${stockCode}`, {
+      const response = await fetch(`${url}/playback_sell_point/${stockCode}`, {
         method: 'POST',
       });
       if (response.ok) {
@@ -316,7 +317,6 @@ const TimeShareContainer = () => {
               type="text"
               id="startTime"
               value={startTime}
-              readOnly
               className="form-control"
             />
           </div>
@@ -328,7 +328,7 @@ const TimeShareContainer = () => {
               type="text"
               id="endTime"
               value={endTime}
-              readOnly
+
               className="form-control"
             />
           </div>
