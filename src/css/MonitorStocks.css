@@ -1,0 +1,13 @@
+/* 在你的 CSS 文件中加入以下样式 */
+.fade-out {
+    animation: fadeOut 1s ease-in-out forwards; /* 动画持续1秒，逐渐消失 */
+  }
+  
+  @keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
