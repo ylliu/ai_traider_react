@@ -14,6 +14,7 @@ import {
 import { Line, Bar } from "react-chartjs-2";
 import ChartAnnotation from "chartjs-plugin-annotation";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { color } from "chart.js/helpers";
 
 // 注册必要的组件
 ChartJS.register(
@@ -28,7 +29,7 @@ ChartJS.register(
   ChartAnnotation
 );
 
-const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
+const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
   const timeLabels = data.map((item) => {
     const date = new Date(item.time * 1000); // 转换为毫秒
     const isoString = date.toISOString(); // 获取 ISO 格式字符串
@@ -37,7 +38,44 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
 
   const prices = data.map((item) => item.close);
   const volumes = data.map((item) => item.volume);
+  const highs = data.map((item) => item.high);
+  const lows = data.map((item) => item.low);
   const priceChanges = prices.map((price, index) => index === 0 ? 0 : price - prices[index - 1]);
+  console.log('dddd')
+  console.log(preClose)
+
+
+  // 找到高低值
+  const maxPrice = Math.max(...prices);
+  const minPrice = Math.min(...prices);
+  
+  // 计算离 pre_close 的距离
+  const distance = Math.max(Math.abs(preClose - maxPrice), Math.abs(preClose - minPrice));
+  
+  // 设置 y 轴上下限
+  const yMin = preClose - distance;
+  const yMax = preClose + distance;
+
+  // 计算当天相对于昨日收盘价的最大涨幅和跌幅
+
+  const maxChange = (Math.max(...highs)-preClose) / preClose * 100;; // 最大涨幅
+  const minChange =(Math.min(...lows)-preClose) / preClose * 100;; // 最大涨幅
+  const absMaxChange = Math.max(Math.abs(maxChange), Math.abs(minChange)); // 绝对最大涨跌幅
+
+ // 计算累积均线（Cumulative Moving Average）
+ const cumulativeMovingAverage = (prices) => {
+  const result = [];
+  let cumulativeSum = 0;
+  for (let i = 0; i < prices.length; i++) {
+    cumulativeSum += prices[i];  // 累加价格
+    const avgPrice = cumulativeSum / (i + 1);  // 计算当前索引的均值
+    result.push(avgPrice);
+  }
+  return result;
+};
+
+// 计算累积均线
+const cmaData = cumulativeMovingAverage(prices);
 
   // 数据：价格
   const priceData = {
@@ -48,11 +86,20 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
         data: prices,
         borderColor: (context) => {
           const index = context.dataIndex;
-          return priceChanges[index] >= 0 ? "rgba(75, 192, 192, 1)" : "rgba(255, 99, 132, 1)"; // 红绿区分上涨和下跌
+          return priceChanges[index] >= 0 ? "" : "rgba(255, 99, 132, 1)"; // 红绿区分上涨和下跌
         },
         backgroundColor: "rgba(75, 192, 192, 0.2)",
-        borderWidth: 2,
+        borderWidth: 1,
         pointRadius: 0, // 隐藏圆点
+      },
+      {
+        label: "Cumulative Moving Average", // 均线的label
+        data: cmaData,
+        borderColor: "orange", // 设置均线的颜色为橙黄色
+        backgroundColor: "rgba(255, 159, 64, 0.2)", // 橙黄色的透明背景
+        borderWidth: 1,
+        pointRadius: 0, // 隐藏圆点
+        borderDash: [], // 实线（默认就是实线，移除虚线配置）
       },
     ],
   };
@@ -66,13 +113,62 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
         data: volumes,
         backgroundColor: (context) => {
           const index = context.dataIndex;
-          return priceChanges[index] >= 0 ? "rgba(75, 192, 192, 0.6)" : "rgba(255, 99, 132, 0.6)"; // 根据价格涨跌设置颜色
+          return priceChanges[index] >= 0 ? "rgba(248, 70, 58,1.0)" : "rgba(000, 142, 009,1.0)"; // 使用更深的颜色
         },
-        borderColor: "rgba(153, 102, 255, 1)",
+        borderColor: "transparent",
         borderWidth: 1,
       },
     ],
   };
+  // 配置：成交量图表
+const volumeOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: false, // 隐藏图例
+    },
+    title: {
+      display: true,
+      text: "Volume",
+    },
+    tooltip: {
+      enabled: true, // 开启tooltips
+      callbacks: {
+        label: (tooltipItem) => {
+          const volume = tooltipItem.raw;
+          const time = tooltipItem.label;
+          return `Time: ${time}, Volume: ${volume}`;
+        },
+      },
+    },
+  },
+  scales: {
+    y: {
+      title: {
+        display: true,
+        text: "Volume",
+      },
+    },
+    x: {
+      title: {
+        display: true,
+        text: "Time",
+      },
+      ticks: {
+        callback: (value, index) => {
+          // 从 timeLabels 获取完整时间
+          const fullTime = timeLabels[index];
+          if (fullTime) {
+            // 提取 HH:mm 格式
+            return fullTime.slice(11, 16);
+          }
+          return value;
+        },
+      },
+    },
+  },
+};
+
  
   // 在时间点标记卖点
   const sellPointData = sellPoints.map((sellPointTime) => {
@@ -80,6 +176,8 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
     console.log(sellPointTime, index);  
     return index !== -1 ? index : null;
   }).filter(index => index !== null);
+
+
   // 配置：价格图表
   const priceOptions = {
     responsive: true,
@@ -99,24 +197,73 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
           label: (tooltipItem) => {
             const price = tooltipItem.raw;
             const time = tooltipItem.label;
-            return `Time: ${time}, Price: ${price}`;
+            return `Time: ${time}, Price: ${parseFloat(price).toFixed(2)}`; // 保持两位小数
           },
         },
       },
      // 添加注释来标记卖点，用 "s" 字母作为标识符
     
      annotation: {
-      annotations: sellPointData.map((index) => ({
-        type: 'point',
-        xValue: index, // 设置卖点的 x 轴位置
-        yValue: prices[index], // 设置卖点的 y 轴位置
-        backgroundColor: 'blue', // 蓝色背景
-        radius: 3,  // 设置圆形的半径为 5，显示蓝色的小圆点
-      })),
+      annotations: [
+        // 绘制收盘价上下的虚线分界线
+        {
+          type: 'line',
+          xMin: timeLabels[0], // 从第一个时间点开始
+          xMax: timeLabels[timeLabels.length - 1], // 到最后一个时间点结束
+          borderColor: 'rgba(0, 0, 0, 0.7)', // 线的颜色
+          borderWidth: 1, // 线宽
+          borderDash: [5, 5], // 设置虚线样式
+          label: {
+            content: `Pre-close: ${parseFloat(preClose).toFixed(2)}`, // 保持两位小数
+            position: 'start',
+            backgroundColor: 'rgba(255, 159, 64, 0.8)',
+          },
+          yMin: preClose, // 预收盘价
+          yMax: preClose, // 预收盘价
+        },
+        // 卖点标记
+        ...sellPointData.map((index) => ({
+          type: 'point',
+          xValue: index,
+          yValue: prices[index],
+          backgroundColor: 'blue',
+          radius: 3,
+        })),
+         // 显示最大涨幅百分比
+         {
+          type: 'label',
+          xValue: timeLabels[timeLabels.length - 6], // X轴的最后一个时间点
+          yValue: yMax*0.995, // 最大股价
+          color: 'rgba(255, 99, 132, 1)', // 红色
+          content: `+${absMaxChange.toFixed(2)}%`, // 显示最大涨幅
+          font: {
+            size: 12,
+            weight: 'bold',
+          },
+          position: 'top',
+          offsetX: 10, // 向右偏移
+        },
+        // 显示最大跌幅百分比
+        {
+          type: 'label',
+          xValue: timeLabels[timeLabels.length - 6], // X轴的最后一个时间点
+          yValue: yMin*1.005, // 最小股价
+          color: 'rgba(000, 142, 009)', // 绿色
+          content: `${absMaxChange.toFixed(2)}%`, // 显示最大跌幅
+          font: {
+            size: 12,
+            weight: 'bold',
+          },
+          position: 'bottom',
+          offsetX: -10, // 向左偏移
+        },
+      ],
     },
   },
     scales: {
       y: {
+        min: yMin, // 设置 y 轴的最小值
+        max: yMax, // 设置 y 轴的最大值
         type: "linear",
         position: "left",
         title: {
@@ -124,7 +271,15 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
           text: "Price",
         },
         ticks: {
-          callback: (value) => `${value}`, // 显示为货币格式
+          callback: (value) => `${parseFloat(value).toFixed(2)}`, // 保持两位小数
+          stepSize: (yMax - yMin) / 4,  // 设定 4 个显示刻度
+        },
+        grid: {
+          drawOnChartArea: true, // 仅在图表区域绘制网格
+          drawBorder: true, // 不绘制边框
+          color: 'rgba(0, 0, 0, 0.1)', // 网格颜色
+          lineWidth: 1, // 网格线宽度
+          borderDash: [5, 5], // 设置虚线样式
         },
       },
       x: {
@@ -133,6 +288,9 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
           text: "Time",
         },
         ticks: {
+          max: timeLabels[timeLabels.length - 1], // 最大值为最后一个时间点
+          min: timeLabels[0], // 最小值为第一个时间点
+          stepSize: Math.floor(timeLabels.length / 4), // 设置每个刻度之间的间距为总数/4
           callback: (value, index) => {
             // 从 timeLabels 获取完整时间
             const fullTime = timeLabels[index];
@@ -141,6 +299,13 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
               return fullTime.slice(11, 16);
             }
             return value;
+          },
+          grid: {
+            drawOnChartArea: true, // 仅在图表区域绘制网格
+            drawBorder: true, // 不绘制边框
+            color: 'rgba(0, 0, 0, 0.1)', // 网格颜色
+            lineWidth: 1, // 网格线宽度
+            borderDash: [5, 5], // 设置虚线样式
           },
         },
       },
@@ -167,7 +332,7 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints }) => {
   return (
     <div className="mb-4">
       <Line data={priceData} options={priceOptions} />
-      <Bar data={volumeData} options={{ responsive: true }} />
+      <Bar data={volumeData} options={volumeOptions} />
     </div>
   );
 };
@@ -183,6 +348,9 @@ const TimeShareContainer = () => {
   const [sellPoints, setSellPoints] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);  // 新增：控制按钮状态
   const [trainingComplete, setTrainingComplete] = useState(false); // 控制训练完成提示框显示
+  const [preClose, setPreClose] = useState(null); // 新增这一行
+  const [sellPointMessage, setSellPointMessage] = useState('');  // 提示信息
+  const [isMessageVisible, setIsMessageVisible] = useState(false);  // 控制提示框是否显示
   const serverIp = "127.0.0.1";  // 替换为你的服务器IP
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
@@ -203,7 +371,6 @@ const TimeShareContainer = () => {
     setEndTimeInt(clickedTime); // 更新结束时间整数
   }
 };
-  // 处理查看分时图按钮点击
   const handleViewChart = async () => {
     if (!stockCode) {
       alert("Please enter a stock code.");
@@ -213,12 +380,32 @@ const TimeShareContainer = () => {
     // 清空卖点数据
     setSellPoints([]);
     setIsProcessing(false);  // 重置按钮状态
-   
+
     try {
       const response = await fetch(`${url}/time_share_data/${stockCode}`);
       if (response.ok) {
-        const data = await response.json();
-        setChartData(data);
+        const jsonResponse = await response.json();
+         // 从 jsonResponse 中提取 data
+        const data = jsonResponse.data; // 提取 data 部分
+        const preClose = jsonResponse.pre_close; // 提取 pre_close
+        console.log('preclose');
+        console.log(preClose);
+        // 检查数据长度并填充不足的数据
+        const requiredLength = 241;
+        if (data.length < requiredLength) {
+          // 计算需要填充的数量
+          const fillCount = requiredLength - data.length;
+          // 用空对象填充
+          const filledData = [
+            ...data,
+            ...Array(fillCount).fill({ time: null, close: null, volume: null }),
+          ];
+          setChartData(filledData);
+        } else {
+          setChartData(data);
+        }
+         // 保存 pre_close 以便传递给图表组件
+         setPreClose(preClose); // 假设你已经定义了 setPreClose
       } else {
         alert("Failed to fetch data.");
       }
@@ -227,6 +414,7 @@ const TimeShareContainer = () => {
       alert("Error fetching data.");
     }
   };
+
   const handleStartTraining = async () => {
     if (!stockCode || !startTimeInt || !endTimeInt) {
       alert("Please enter stock code, start time, and end time.");
@@ -273,6 +461,16 @@ const TimeShareContainer = () => {
       if (response.ok) {
         const data = await response.json();
         setSellPoints(data);
+        if (data.length === 0) {
+          // 如果没有卖点，显示提示信息
+          setSellPointMessage('未找到卖点');
+          setIsMessageVisible(true);
+          
+          // 1秒后自动隐藏提示框
+          setTimeout(() => {
+            setIsMessageVisible(false);
+          }, 1000);
+        }
         console.log(sellPoints);
       } else {
         alert('Failed to fetch sell points.');
@@ -357,9 +555,15 @@ const TimeShareContainer = () => {
           训练完成！
         </div>
       )}
+      {isMessageVisible && (
+      <div className="alert alert-warning alert-dismissible fade show" role="alert">
+        {sellPointMessage}
+      </div>
+    )}
       {chartData.length > 0 && (
         <TimeShareChart
           data={chartData}  onSelectRange={handleSelectRange} sellPoints={sellPoints}
+          preClose={preClose}
          
         />
       )}

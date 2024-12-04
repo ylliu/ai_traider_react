@@ -12,7 +12,7 @@ const App = () => {
   const url = `http://${serverIp}:${port}`;
   useEffect(() => {
     axios.get(`${url}/time_share_data/${stockCode}`)
-        .then(response => setData(response.data))
+        .then(response => setData(response.data.data))
         .catch(error => console.error('Error fetching config:', error));
   }, []);
 
