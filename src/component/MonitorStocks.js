@@ -20,6 +20,7 @@ const MonitorStocks = () => {
       .then(data => {
         setServerIp(data.server_ip);
         console.log(data.server_ip); // 确保正确获取到 serverIp
+        fetchStocks();
       })
       .catch(error => {
         console.error('Error:', error);
@@ -165,10 +166,10 @@ const MonitorStocks = () => {
     }
   };
 
-  // 组件首次渲染时，加载所有股票池
-  useEffect(() => {
-    fetchStocks();
-  }, []);
+  // // 组件首次渲染时，加载所有股票池
+  // useEffect(() => {
+  //   fetchStocks();
+  // }, []);
 
   return (
     <div className="container">
