@@ -7,9 +7,12 @@ const MonitorStocks = () => {
   const [alertMessage, setAlertMessage] = useState("");  // 用于显示自动消失的提示消息
   const [alertType, setAlertType] = useState("info");  // 用于控制提示消息类型（success, danger, info）
   const [fadeOut, setFadeOut] = useState(false);  // 控制提示消息淡出动画
+  const [isMonitoring, setIsMonitoring] = useState(false);  // 新增监控状态
+  const [isStopMonitoring, setIsStopMonitoring] = useState(false);  // 新增监控状态
   const serverIp = "127.0.0.1";  // 替换为你的服务器IP
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
+  const disappearTime = 1000;  // 提示消息自动消失时间
   // 从数据库加载所有股票池列表
   const fetchStocks = async () => {
     try {
@@ -20,13 +23,13 @@ const MonitorStocks = () => {
       } else {
         setAlertMessage("Failed to fetch stock list.");
         setAlertType("danger");  // 错误提示
-        setTimeout(() => setAlertMessage(""), 3000);  // 3秒后自动消失
+        setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
       }
     } catch (error) {
       console.error("Error fetching stock list:", error);
       setAlertMessage("Error fetching stock list.");
       setAlertType("danger");
-      setTimeout(() => setAlertMessage(""), 3000);  // 3秒后自动消失
+      setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
     }
   };
 
@@ -36,7 +39,7 @@ const MonitorStocks = () => {
       setAlertMessage("Please enter a stock name.");
       setAlertType("warning");
       setFadeOut(true);
-      setTimeout(() => setAlertMessage(""), 1000);  // 3秒后自动消失
+      setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
       setFadeOut(false);
       return;
     }
@@ -55,7 +58,7 @@ const MonitorStocks = () => {
         setAlertMessage("Failed to add stock.");
         // setAlertType("danger");
         setFadeOut(true);
-        setTimeout(() => setAlertMessage(""), 1000);  // 3秒后自动消失
+        setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
         setFadeOut(false);
       }
     } catch (error) {
@@ -63,7 +66,7 @@ const MonitorStocks = () => {
       setAlertMessage("Error adding stock.");
       setAlertType("danger");
       setFadeOut(true);
-      setTimeout(() => setAlertMessage(""), 1000);  // 3秒后自动消失
+      setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
       setFadeOut(false);
     } finally {
       setIsProcessing(false);  // 完成处理，恢复按钮状态
@@ -86,15 +89,66 @@ const MonitorStocks = () => {
       } else {
         setAlertMessage("Failed to delete stock.");
         setAlertType("danger");
-        setTimeout(() => setAlertMessage(""), 3000);  // 3秒后自动消失
+        setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
       }
     } catch (error) {
       console.error("Error deleting stock:", error);
       setAlertMessage("Error deleting stock.");
       setAlertType("danger");
-      setTimeout(() => setAlertMessage(""), 3000);  // 3秒后自动消失
+      setTimeout(() => setAlertMessage(""), disappearTime);  // 3秒后自动消失
     } finally {
      
+    }
+  };
+
+  const handleStartMonitor = async () => {
+    setIsMonitoring(true);
+    try {
+      const response = await fetch(`${url}/start_monitor`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        setAlertMessage("监控已开始");
+        setAlertType("success");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      } else {
+        setAlertMessage("启动监控失败。");
+        setAlertType("danger");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      }
+    } catch (error) {
+      console.error("Error starting monitor:", error);
+      setAlertMessage("启动监控时出错。");
+      setAlertType("danger");
+      setTimeout(() => setAlertMessage(""), disappearTime);
+    } finally {
+   
+    }
+  };
+
+  const handleStopMonitor = async () => {
+   setIsStopMonitoring(true);
+    try {
+      const response = await fetch(`${url}/stop_monitor`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        setAlertMessage("监控已结束");
+        setAlertType("success");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+        setIsMonitoring(false);
+      } else {
+        setAlertMessage("结束监控失败。");
+        setAlertType("danger");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      }
+    } catch (error) {
+      console.error("Error stopping monitor:", error);
+      setAlertMessage("结束监控时出错。");
+      setAlertType("danger");
+      setTimeout(() => setAlertMessage(""), disappearTime);
+    } finally {
+      setIsStopMonitoring(false);
     }
   };
 
@@ -124,6 +178,27 @@ const MonitorStocks = () => {
             disabled={isProcessing}  // 如果正在处理，禁用按钮
           >
             {isProcessing ? "添加中..." : "添加监控"}
+          </button>
+        </div>
+      </div>
+       {/* 开始监控和结束监控按钮 */}
+       <div className="row mb-3">
+        <div className="col-md-6">
+          <button
+            onClick={handleStartMonitor}
+            className="btn btn-success"
+            disabled={isMonitoring}
+          >
+              {isMonitoring ? "正在监控" : "开始监控"}
+          </button>
+        </div>
+        <div className="col-md-6">
+          <button
+            onClick={handleStopMonitor}
+            className="btn btn-warning"
+            disabled={isStopMonitoring}
+          >
+            结束监控
           </button>
         </div>
       </div>

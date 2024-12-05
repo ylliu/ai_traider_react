@@ -10,11 +10,7 @@ const App = () => {
   const serverIp = "127.0.0.1";  // 替换为你的服务器IP
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
-  useEffect(() => {
-    axios.get(`${url}/time_share_data/${stockCode}`)
-        .then(response => setData(response.data.data))
-        .catch(error => console.error('Error fetching config:', error));
-  }, []);
+ 
 
   return (
     <div className="container-fluid">
@@ -25,8 +21,8 @@ const App = () => {
         </div>
         {/* 右侧窗口，包含 TimeShareChart 组件 */}
         <div className="col-md-9 p-3">
-          <h1>Time Share Chart</h1>
-          {data.length > 0 ? <TimeShareChart data={data} /> : <p>Loading...</p>}
+          <h4>Stock Sell Assistant </h4>
+          { <TimeShareChart data={data} /> }
         </div>
       </div>
     </div>

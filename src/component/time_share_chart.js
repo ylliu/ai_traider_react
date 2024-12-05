@@ -41,8 +41,6 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
   const highs = data.map((item) => item.high);
   const lows = data.map((item) => item.low);
   const priceChanges = prices.map((price, index) => index === 0 ? 0 : price - prices[index - 1]);
-  console.log('dddd')
-  console.log(preClose)
 
 
   // 找到高低值，忽视null
@@ -53,16 +51,12 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
 
   
   // 设置 y 轴上下限
-  const yMin = preClose - distance;
-  const yMax = preClose + distance;
-  console.log(yMin, yMax) 
+  const yMin = (preClose - distance)*0.99;
+  const yMax = preClose + distance*1.01;
 
   // 计算当天相对于昨日收盘价的最大涨幅和跌幅
-  console.log("highs")
-  console.log(highs)
   const maxHigh = Math.max(...highs.filter(high => high !== null));
   const minLow = Math.max(...lows.filter(low=> low !== null));
-  console.log(maxHigh, minLow)
   const maxChange = (maxHigh-preClose) / preClose * 100;; // 最大涨幅
   const minChange =(minLow-preClose) / preClose * 100;; // 最大涨幅
   const absMaxChange = Math.max(Math.abs(maxChange), Math.abs(minChange)); // 绝对最大涨跌幅
@@ -79,8 +73,6 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
     const avgPrice = cumulativeSum / (i + 1);  // 计算当前索引的均值
     result.push(avgPrice);
   }
-  console.log(prices.length);
-  console.log(result);
   return result;
 };
 
@@ -398,8 +390,6 @@ const TimeShareContainer = () => {
          // 从 jsonResponse 中提取 data
         const data = jsonResponse.data; // 提取 data 部分
         const preClose = jsonResponse.pre_close; // 提取 pre_close
-        console.log('preclose');
-        console.log(preClose);
         // 检查数据长度并填充不足的数据
         const requiredLength = 241;
         if (data.length < requiredLength) {
@@ -554,7 +544,7 @@ const TimeShareContainer = () => {
               className="btn btn-success rounded"
               disabled={isProcessing}  // 禁用按钮
             >
-              {isProcessing ? "计算卖点中..." : "查看卖点"}
+              {isProcessing ? "计算卖点" : "查看卖点"}
             </button>
           </div>
       </div>

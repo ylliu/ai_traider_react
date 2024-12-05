@@ -11,3 +11,8 @@
       opacity: 0;
     }
   }
+
+  .btn-disabled {
+    opacity: 0.5;  /* 使按钮变淡 */
+    pointer-events: none;  /* 禁用点击事件 */
+  }
