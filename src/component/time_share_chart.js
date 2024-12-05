@@ -45,21 +45,26 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
   console.log(preClose)
 
 
-  // 找到高低值
-  const maxPrice = Math.max(...prices);
-  const minPrice = Math.min(...prices);
-  
+  // 找到高低值，忽视null
+  const maxPrice = Math.max(...prices.filter(price => price !== null));
+  const minPrice = Math.min(...prices.filter(price => price !== null));
   // 计算离 pre_close 的距离
   const distance = Math.max(Math.abs(preClose - maxPrice), Math.abs(preClose - minPrice));
+
   
   // 设置 y 轴上下限
   const yMin = preClose - distance;
   const yMax = preClose + distance;
+  console.log(yMin, yMax) 
 
   // 计算当天相对于昨日收盘价的最大涨幅和跌幅
-
-  const maxChange = (Math.max(...highs)-preClose) / preClose * 100;; // 最大涨幅
-  const minChange =(Math.min(...lows)-preClose) / preClose * 100;; // 最大涨幅
+  console.log("highs")
+  console.log(highs)
+  const maxHigh = Math.max(...highs.filter(high => high !== null));
+  const minLow = Math.max(...lows.filter(low=> low !== null));
+  console.log(maxHigh, minLow)
+  const maxChange = (maxHigh-preClose) / preClose * 100;; // 最大涨幅
+  const minChange =(minLow-preClose) / preClose * 100;; // 最大涨幅
   const absMaxChange = Math.max(Math.abs(maxChange), Math.abs(minChange)); // 绝对最大涨跌幅
 
  // 计算累积均线（Cumulative Moving Average）
@@ -67,10 +72,15 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
   const result = [];
   let cumulativeSum = 0;
   for (let i = 0; i < prices.length; i++) {
+    if (prices[i] === null) {
+      continue; // 跳过当前的循环
+    }
     cumulativeSum += prices[i];  // 累加价格
     const avgPrice = cumulativeSum / (i + 1);  // 计算当前索引的均值
     result.push(avgPrice);
   }
+  console.log(prices.length);
+  console.log(result);
   return result;
 };
 
@@ -232,7 +242,7 @@ const volumeOptions = {
          // 显示最大涨幅百分比
          {
           type: 'label',
-          xValue: timeLabels[timeLabels.length - 6], // X轴的最后一个时间点
+          xValue: 235, // X轴的最后一个时间点
           yValue: yMax*0.995, // 最大股价
           color: 'rgba(255, 99, 132, 1)', // 红色
           content: `+${absMaxChange.toFixed(2)}%`, // 显示最大涨幅
@@ -246,7 +256,7 @@ const volumeOptions = {
         // 显示最大跌幅百分比
         {
           type: 'label',
-          xValue: timeLabels[timeLabels.length - 6], // X轴的最后一个时间点
+          xValue:235, // X轴的最后一个时间点
           yValue: yMin*1.005, // 最小股价
           color: 'rgba(000, 142, 009)', // 绿色
           content: `${absMaxChange.toFixed(2)}%`, // 显示最大跌幅
@@ -398,7 +408,7 @@ const TimeShareContainer = () => {
           // 用空对象填充
           const filledData = [
             ...data,
-            ...Array(fillCount).fill({ time: null, close: null, volume: null }),
+            ...Array(fillCount).fill({ time: null, close: null, volume: null,high : null, low: null }),
           ];
           setChartData(filledData);
         } else {
