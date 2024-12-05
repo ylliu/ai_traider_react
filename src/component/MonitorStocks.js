@@ -11,7 +11,7 @@ const MonitorStocks = () => {
   const [isStopMonitoring, setIsStopMonitoring] = useState(false);  // 新增监控状态
   const [serverIp, setServerIp] = useState(null);
   const port = "5001";  // 替换为你的服务器端口
-  const [url, setUrl] = useState(null); 
+  const url = `http://${serverIp}:${port}`;
   const disappearTime = 1000;  // 提示消息自动消失时间
 
   useEffect(() => {
@@ -19,7 +19,6 @@ const MonitorStocks = () => {
       .then(response => response.json())
       .then(data => {
         setServerIp(data.server_ip);
-        setUrl(`http://${data.server_ip}:${port}`);
         console.log(data.server_ip); // 确保正确获取到 serverIp
       })
       .catch(error => {
