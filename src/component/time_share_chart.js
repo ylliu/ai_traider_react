@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Chart as ChartJS,
   LineElement,
@@ -14,7 +14,6 @@ import {
 import { Line, Bar } from "react-chartjs-2";
 import ChartAnnotation from "chartjs-plugin-annotation";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { color } from "chart.js/helpers";
 
 // 注册必要的组件
 ChartJS.register(
@@ -353,13 +352,25 @@ const TimeShareContainer = () => {
   const [preClose, setPreClose] = useState(null); // 新增这一行
   const [sellPointMessage, setSellPointMessage] = useState('');  // 提示信息
   const [isMessageVisible, setIsMessageVisible] = useState(false);  // 控制提示框是否显示
-  const serverIp = "127.0.0.1";  // 替换为你的服务器IP
+  const [serverIp, setServerIp] = useState(null);
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
   // 处理股票代码输入变化
   const handleStockCodeChange = (e) => {
     setStockCode(e.target.value);
   };
+
+  useEffect(() => {
+    fetch('./server_ip.json')
+      .then(response => response.json())
+      .then(data => {
+        setServerIp(data.server_ip);
+        console.log(data.server_ip); // 确保正确获取到 serverIp
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }, []);
 
  // 点击分时图时的回调函数
  const handleSelectRange = (clickedTime) => {

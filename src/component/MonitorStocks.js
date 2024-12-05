@@ -9,10 +9,23 @@ const MonitorStocks = () => {
   const [fadeOut, setFadeOut] = useState(false);  // 控制提示消息淡出动画
   const [isMonitoring, setIsMonitoring] = useState(false);  // 新增监控状态
   const [isStopMonitoring, setIsStopMonitoring] = useState(false);  // 新增监控状态
-  const serverIp = "127.0.0.1";  // 替换为你的服务器IP
+  const [serverIp, setServerIp] = useState(null);
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
   const disappearTime = 1000;  // 提示消息自动消失时间
+
+  useEffect(() => {
+    fetch('./server_ip.json')
+      .then(response => response.json())
+      .then(data => {
+        setServerIp(data.server_ip);
+        console.log(data.server_ip); // 确保正确获取到 serverIp
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }, []);
+  
   // 从数据库加载所有股票池列表
   const fetchStocks = async () => {
     try {
