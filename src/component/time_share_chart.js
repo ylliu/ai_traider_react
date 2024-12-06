@@ -55,7 +55,7 @@ const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
 
   // 计算当天相对于昨日收盘价的最大涨幅和跌幅
   const maxHigh = Math.max(...highs.filter(high => high !== null));
-  const minLow = Math.max(...lows.filter(low=> low !== null));
+  const minLow = Math.min(...lows.filter(low=> low !== null));
   const maxChange = (maxHigh-preClose) / preClose * 100;; // 最大涨幅
   const minChange =(minLow-preClose) / preClose * 100;; // 最大涨幅
   const absMaxChange = Math.max(Math.abs(maxChange), Math.abs(minChange)); // 绝对最大涨跌幅

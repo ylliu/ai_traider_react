@@ -20,16 +20,43 @@ const MonitorStocks = () => {
       .then(data => {
         setServerIp(data.server_ip);
         console.log(data.server_ip); // 确保正确获取到 serverIp
-        fetchStocks();
       })
       .catch(error => {
         console.error('Error:', error);
       });
   }, []);
+
+  useEffect(() => {
+    if (serverIp) { // 当 serverIp 不为 null 时调用 fetchStocks
+      fetchStocks();
+      fetchMonitoringStatus();
+    }
+  }, [serverIp]); // 依赖于 serverIp
   
+   // 获取当前监控状态
+   const fetchMonitoringStatus = async () => {
+    try {
+      const response = await fetch(`${url}/monitor_status`); // 查询监控状态接口
+      if (response.ok) {
+        const data = await response.json();
+        setIsMonitoring(data.isMonitoring); // 更新监控状态
+      } else {
+        setAlertMessage("获取监控状态失败。");
+        setAlertType("danger");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      }
+    } catch (error) {
+      console.error("Error fetching monitoring status:", error);
+      setAlertMessage("获取监控状态时出错。");
+      setAlertType("danger");
+      setTimeout(() => setAlertMessage(""), disappearTime);
+    }
+  };
+
+
   // 从数据库加载所有股票池列表
   const fetchStocks = async () => {
-    try {
+    try { 
       const response = await fetch(`${url}/get_all_stocks`);
       if (response.ok) {
         const data = await response.json();
