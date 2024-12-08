@@ -28,7 +28,7 @@ ChartJS.register(
   ChartAnnotation
 );
 
-const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose }) => {
+const TimeShareChart = ({ data, onSelectRange, sellPoints,preClose,buyPoints }) => {
   const timeLabels = data.map((item) => {
     const date = new Date(item.time * 1000); // 转换为毫秒
     const isoString = date.toISOString(); // 获取 ISO 格式字符串
@@ -178,6 +178,13 @@ const volumeOptions = {
     return index !== -1 ? index : null;
   }).filter(index => index !== null);
 
+  // 在时间点标记买点
+  const buyPointData = buyPoints.map((buyPointTime) => {
+    const index = timeLabels.findIndex((time) => time === buyPointTime);
+    console.log(buyPointTime, index);  
+    return index !== -1 ? index : null;
+  }).filter(index => index !== null);
+
 
   // 配置：价格图表
   const priceOptions = {
@@ -228,6 +235,14 @@ const volumeOptions = {
           xValue: index,
           yValue: prices[index],
           backgroundColor: 'blue',
+          radius: 3,
+        })),
+        // 买点标记
+        ...buyPointData.map((index) => ({
+          type: 'point',
+          xValue: index,
+          yValue: prices[index],
+          backgroundColor: 'red',
           radius: 3,
         })),
          // 显示最大涨幅百分比
@@ -347,7 +362,9 @@ const TimeShareContainer = () => {
   const [startTimeInt, setStartTimeInt] = useState(""); // 开始卖出时间
   const [endTimeInt, setEndTimeInt] = useState(""); // 结束卖出时间
   const [sellPoints, setSellPoints] = useState([]);
+  const [buyPoints, setBuyPoints] = useState([]);  // 新增：存储买点
   const [isProcessing, setIsProcessing] = useState(false);  // 新增：控制按钮状态
+  const [isBuyProcessing, setIsBuyProcessing] = useState(false);  // 新增：控制按钮状态
   const [trainingComplete, setTrainingComplete] = useState(false); // 控制训练完成提示框显示
   const [preClose, setPreClose] = useState(null); // 新增这一行
   const [sellPointMessage, setSellPointMessage] = useState('');  // 提示信息
@@ -392,7 +409,10 @@ const TimeShareContainer = () => {
 
     // 清空卖点数据
     setSellPoints([]);
+    // 清空买点数据
+    setBuyPoints([]);
     setIsProcessing(false);  // 重置按钮状态
+    setIsBuyProcessing(false);  // 重置按钮状态
 
     try {
       const response = await fetch(`${url}/time_share_data/${stockCode}`);
@@ -493,7 +513,37 @@ const TimeShareContainer = () => {
       setIsProcessing(false);  // 恢复按钮状态
     }
   };
+  // 新增：查看买点
+  const handlePlaybackBuyPoint = async () => {
+    if (isProcessing) return;  // 如果正在处理，则直接返回
 
+    setIsBuyProcessing(true);  // 设置按钮为“正在计算”
+
+    try {
+      const response = await fetch(`${url}/playback_buy_point/${stockCode}`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBuyPoints(data);
+        if (data.length === 0) {
+          setSellPointMessage('未找到买点');
+          setIsMessageVisible(true);
+          setTimeout(() => {
+            setIsMessageVisible(false);
+          }, 1000);
+        }
+        console.log(buyPoints);
+      } else {
+        alert('Failed to fetch buy points.');
+      }
+    } catch (error) {
+      console.error('Error fetching buy points:', error);
+      alert('Error fetching buy points.');
+    } finally {
+      setIsBuyProcessing(false);  // 恢复按钮状态(false);  
+    }
+  };
   const showTrainingCompleteMessage = () => {
     setTrainingComplete(true);
     setTimeout(() => {
@@ -557,6 +607,13 @@ const TimeShareContainer = () => {
             >
               {isProcessing ? "计算卖点" : "查看卖点"}
             </button>
+            <button
+            onClick={handlePlaybackBuyPoint}
+            className="btn btn-warning"  // 使用橙色
+            disabled={isBuyProcessing}
+           >
+            {isBuyProcessing ? "计算买点" : "查看买点"}
+            </button>
           </div>
       </div>
        
@@ -573,7 +630,7 @@ const TimeShareContainer = () => {
     )}
       {chartData.length > 0 && (
         <TimeShareChart
-          data={chartData}  onSelectRange={handleSelectRange} sellPoints={sellPoints}
+          data={chartData}  onSelectRange={handleSelectRange} sellPoints={sellPoints} buyPoints={buyPoints} 
           preClose={preClose}
          
         />
