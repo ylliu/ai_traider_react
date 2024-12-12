@@ -112,11 +112,10 @@ const cmaData = cumulativeMovingAverage(prices);
       {
         label: "Volume",
         data: volumes,
-        backgroundColor: (context) => {
+        borderColor: (context) => {
           const index = context.dataIndex;
           return priceChanges[index] >= 0 ? "rgba(248, 70, 58,1.0)" : "rgba(000, 142, 009,1.0)"; // 使用更深的颜色
         },
-        borderColor: "transparent",
         borderWidth: 1,
       },
     ],
