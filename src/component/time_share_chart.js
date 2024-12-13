@@ -568,7 +568,7 @@ const TimeShareContainer = () => {
             </button>
           </div>
         </div>
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <div className="input-group">
             <label className="input-group-text" htmlFor="startTime">开始卖出时间</label>
             <input
@@ -590,25 +590,26 @@ const TimeShareContainer = () => {
               className="form-control"
             />
           </div>
-        </div>
+        </div> */}
         <div className="col-sm-12 col-md-2 d-flex align-items-center">
           <div className="input-group">
-            <button 
+            {/* <button 
               onClick={handleStartTraining} 
               className="btn btn-primary me-2 rounded"
             >
            开始训练
-            </button>
+            </button> */}
             <button 
               onClick={handlePlaybackSellPoint} 
-              className="btn btn-success rounded"
+              className="btn btn-success rounded  mr-3"
+              style={{ marginRight: "10px" }}  // 设置右边的间距
               disabled={isProcessing}  // 禁用按钮
             >
               {isProcessing ? "计算卖点" : "查看卖点"}
             </button>
             <button
             onClick={handlePlaybackBuyPoint}
-            className="btn btn-warning"  // 使用橙色
+            className="btn btn-warning rounded"  // 使用橙色
             disabled={isBuyProcessing}
            >
             {isBuyProcessing ? "计算买点" : "查看买点"}
