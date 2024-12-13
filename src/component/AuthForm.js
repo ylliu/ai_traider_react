@@ -30,6 +30,20 @@ const AuthForm = ({ onAuthSuccess }) => {
   const [message, setMessage] = useState("");
   const [isLogin, setIsLogin] = useState(true); // 控制显示登录还是注册表单
   const [showRegisterMessage, setShowRegisterMessage] = useState(false); // 控制是否显示注册提示
+  const port = "5001";  // 替换为你的服务器端口
+  const url = `http://${serverIp}:${port}`;
+
+  useEffect(() => {
+    fetch('./server_ip.json')
+      .then(response => response.json())
+      .then(data => {
+        setServerIp(data.server_ip);
+        console.log(data.server_ip); // 确保正确获取到 serverIp
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }, []);
 
   useEffect(() => {
     if (checkLoginStatus()) {
