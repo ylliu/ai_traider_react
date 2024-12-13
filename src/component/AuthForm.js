@@ -30,6 +30,7 @@ const AuthForm = ({ onAuthSuccess }) => {
   const [message, setMessage] = useState("");
   const [isLogin, setIsLogin] = useState(true); // 控制显示登录还是注册表单
   const [showRegisterMessage, setShowRegisterMessage] = useState(false); // 控制是否显示注册提示
+  const [serverIp, setServerIp] = useState(null);
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
 
@@ -55,7 +56,7 @@ const AuthForm = ({ onAuthSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:5001/login", {
+      const response = await axios.post(`${url}/login`, {
         username,
         password,
       });
@@ -65,7 +66,7 @@ const AuthForm = ({ onAuthSuccess }) => {
       localStorage.setItem("access_token", token);  // 保存 Token
       onAuthSuccess(); // 登录成功，调用父组件的回调
     } catch (error) {
-      setMessage(error.response.data.message);
+      setMessage("登录失败，请检查用户名和密码");
     }
   };
 
@@ -73,7 +74,7 @@ const AuthForm = ({ onAuthSuccess }) => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:5001/register", {
+      const response = await axios.post(`${url}/register`, {
         username,
         password,
       });
