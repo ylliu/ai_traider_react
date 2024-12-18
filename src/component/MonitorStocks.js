@@ -203,7 +203,7 @@ const MonitorStocks = () => {
       <h4>Monitor Stocks</h4>
       {/* 输入框和添加按钮 */}
       <div className="row mb-3">
-        <div className="col-md-6">
+        <div className="input-group">
           <input
             type="text"
             value={stockName}
@@ -211,11 +211,9 @@ const MonitorStocks = () => {
             className="form-control"
             placeholder="Enter stock name"
           />
-        </div>
-        <div className="col-md-6">
-          <button
+           <button
             onClick={handleAddStock}
-            className="btn btn-primary"
+            className="btn btn-primary rounded"
             disabled={isProcessing}  // 如果正在处理，禁用按钮
           >
             {isProcessing ? "添加中..." : "添加监控"}
@@ -223,20 +221,19 @@ const MonitorStocks = () => {
         </div>
       </div>
        {/* 开始监控和结束监控按钮 */}
-       <div className="row mb-3">
-        <div className="col-md-6">
+        <div className="col-md-12 mt-2 d-flex justify-content-start">
+        <div className="input-group">
           <button
             onClick={handleStartMonitor}
-            className="btn btn-success"
+            className="btn btn-success rounded"
             disabled={isMonitoring}
+            style={{ marginRight: "10px" }}  // 设置右边的间距
           >
               {isMonitoring ? "正在监控" : "开始监控"}
           </button>
-        </div>
-        <div className="col-md-6">
           <button
             onClick={handleStopMonitor}
-            className="btn btn-warning"
+            className="btn btn-warning rounded"
             disabled={isStopMonitoring}
           >
             结束监控
