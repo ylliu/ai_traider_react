@@ -553,7 +553,7 @@ const TimeShareContainer = () => {
   return (
     <div className="container">
       <div className="row mb-3">
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div className="input-group">
             <input
               type="text"
@@ -563,7 +563,7 @@ const TimeShareContainer = () => {
               placeholder="Enter stock code"
               style={{ minWidth: '200px' }}  // 添加这一行
             />
-            <button onClick={handleViewChart} className="btn btn-primary">
+            <button onClick={handleViewChart} className="btn btn-primary rounded">
               查看分时图
             </button>
           </div>
@@ -591,7 +591,7 @@ const TimeShareContainer = () => {
             />
           </div>
         </div> */}
-        <div className="col-sm-12 col-md-2 d-flex align-items-center">
+         <div className="col-md-12 mt-2 d-flex justify-content-start">
           <div className="input-group">
             {/* <button 
               onClick={handleStartTraining} 
