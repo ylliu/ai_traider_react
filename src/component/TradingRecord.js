@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const TradingRecord = () => {
@@ -12,6 +12,20 @@ const TradingRecord = () => {
   const url = `http://${serverIp}:${port}`;
 
   const fade_time = 1000; // 提示信息淡出的时间
+
+  // 获取当前日期的字符串，格式为 YYYY-MM-DD
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // 月份补零
+    const day = String(today.getDate()).padStart(2, "0"); // 日期补零
+    return `${year}-${month}-${day}`;
+  };
+
+  // 在组件加载时设置默认日期为今天
+  useEffect(() => {
+    setDate(getTodayDate());
+  }, []);
 
   // 查询交易记录的方法
   const fetchRecords = async () => {
