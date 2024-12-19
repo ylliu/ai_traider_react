@@ -8,6 +8,8 @@ const TradingRecord = () => {
   const [alertType, setAlertType] = useState("info"); // 提示类型（success, danger, info）
   const [isLoading, setIsLoading] = useState(false); // 查询加载状态
   const [serverIp, setServerIp] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // 排序配置
+
   const port = "5001"; // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
 
@@ -49,8 +51,6 @@ const TradingRecord = () => {
     }
 
     setIsLoading(true); // 设置加载状态
-    // setMessage("查询中..."); // 显示查询中提示
-    // setAlertType("info");
 
     try {
       const response = await axios.get(`${url}/trading_records`, {
@@ -66,6 +66,27 @@ const TradingRecord = () => {
       setTimeout(() => setMessage(""), fade_time);
       setIsLoading(false); // 取消加载状态
     }
+  };
+
+  // 排序方法
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc"; // 如果当前为升序，再次点击切换为降序
+    }
+    setSortConfig({ key, direction });
+
+    const sortedRecords = [...records].sort((a, b) => {
+      if (a[key] < b[key]) {
+        return direction === "asc" ? -1 : 1;
+      }
+      if (a[key] > b[key]) {
+        return direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    setRecords(sortedRecords); // 更新排序后的记录
   };
 
   // 计算收益率并格式化为百分比字符串
@@ -120,11 +141,11 @@ const TradingRecord = () => {
         <thead>
           <tr>
             <th>name</th>
-            <th>action</th>
+            <th onClick={() => handleSort("direction")}>action</th> {/* 添加排序事件 */}
             <th>cost</th>
             <th>price</th>
-            <th>rate</th>
-            <th>time</th>
+            <th onClick={() => handleSort("rate")}>rate</th> {/* 添加排序事件 */}
+            <th onClick={() => handleSort("timestamp")}>time</th> {/* 添加排序事件 */}
           </tr>
         </thead>
         <tbody>
