@@ -6,9 +6,8 @@ const TradingRecord = () => {
   const [date, setDate] = useState(""); // 日期参数
   const [message, setMessage] = useState(""); // 消息提示
   const [alertType, setAlertType] = useState("info"); // 提示类型（success, danger, info）
-
+  const [serverIp, setServerIp] = useState(null);
   const port = "5001"; // 替换为你的服务器端口
-  const serverIp = "127.0.0.1"; // 替换为你的服务器地址
   const url = `http://${serverIp}:${port}`;
 
   const fade_time = 1000; // 提示信息淡出的时间
@@ -22,6 +21,18 @@ const TradingRecord = () => {
     return `${year}-${month}-${day}`;
   };
 
+    useEffect(() => {
+        fetch('./server_ip.json')
+        .then(response => response.json())
+        .then(data => {
+            setServerIp(data.server_ip);
+            console.log(data.server_ip); // 确保正确获取到 serverIp
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }, []);
+    
   // 在组件加载时设置默认日期为今天
   useEffect(() => {
     setDate(getTodayDate());
