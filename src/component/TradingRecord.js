@@ -21,18 +21,18 @@ const TradingRecord = () => {
     return `${year}-${month}-${day}`;
   };
 
-    useEffect(() => {
-        fetch('./server_ip.json')
-        .then(response => response.json())
-        .then(data => {
-            setServerIp(data.server_ip);
-            console.log(data.server_ip); // 确保正确获取到 serverIp
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }, []);
-    
+  useEffect(() => {
+    fetch("./server_ip.json")
+      .then((response) => response.json())
+      .then((data) => {
+        setServerIp(data.server_ip);
+        console.log(data.server_ip); // 确保正确获取到 serverIp
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }, []);
+
   // 在组件加载时设置默认日期为今天
   useEffect(() => {
     setDate(getTodayDate());
@@ -68,6 +68,22 @@ const TradingRecord = () => {
     return `${profitRate.toFixed(2)}%`; // 保留两位小数
   };
 
+  // 格式化时间戳，仅保留小时和分钟
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp);
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`; // 格式化为 HH:mm
+  };
+
+  // 映射 direction 字段
+  const formatDirection = (direction) => {
+    if (direction === "Buy_Point") return "buy";
+    if (direction === "Sell_Point") return "sell";
+    return direction; // 其他情况返回原始值
+  };
+
   return (
     <div>
       <h4>Trading Records</h4>
@@ -96,12 +112,12 @@ const TradingRecord = () => {
       <table className="table">
         <thead>
           <tr>
-            <th>股票名称</th>
-            <th>方向</th>
-            <th>买入价</th>
-            <th>当前价</th>
-            <th>收益率</th>
-            <th>时间戳</th>
+            <th>name</th>
+            <th>action</th>
+            <th>cost</th>
+            <th>price</th>
+            <th>rate</th>
+            <th>time</th>
           </tr>
         </thead>
         <tbody>
@@ -111,11 +127,11 @@ const TradingRecord = () => {
             return (
               <tr key={index}>
                 <td>{record.stock_name}</td>
-                <td>{record.direction}</td>
-                <td>{record.price}</td>
-                <td>{record.close_price}</td>
+                <td>{formatDirection(record.direction)}</td> {/* 映射方向 */}
+                <td>{record.price.toFixed(2)}</td> {/* 格式化价格 */}
+                <td>{record.close_price.toFixed(2)}</td> {/* 格式化价格 */}
                 <td className={profitRateClass}>{profitRate}</td>
-                <td>{record.timestamp}</td>
+                <td>{formatTimestamp(record.timestamp)}</td> {/* 格式化时间戳 */}
               </tr>
             );
           })}
