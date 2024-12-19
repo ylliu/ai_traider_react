@@ -6,6 +6,7 @@ const TradingRecord = () => {
   const [date, setDate] = useState(""); // 日期参数
   const [message, setMessage] = useState(""); // 消息提示
   const [alertType, setAlertType] = useState("info"); // 提示类型（success, danger, info）
+  const [isLoading, setIsLoading] = useState(false); // 查询加载状态
   const [serverIp, setServerIp] = useState(null);
   const port = "5001"; // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
@@ -46,6 +47,11 @@ const TradingRecord = () => {
       setTimeout(() => setMessage(""), fade_time);
       return;
     }
+
+    setIsLoading(true); // 设置加载状态
+    // setMessage("查询中..."); // 显示查询中提示
+    // setAlertType("info");
+
     try {
       const response = await axios.get(`${url}/trading_records`, {
         params: { date: date }, // 传递日期参数
@@ -53,11 +59,12 @@ const TradingRecord = () => {
       setRecords(response.data); // 更新交易记录
       setMessage("查询成功");
       setAlertType("success");
-      setTimeout(() => setMessage(""), fade_time);
     } catch (error) {
       setMessage("查询失败，请检查服务器");
       setAlertType("danger");
+    } finally {
       setTimeout(() => setMessage(""), fade_time);
+      setIsLoading(false); // 取消加载状态
     }
   };
 
@@ -96,8 +103,8 @@ const TradingRecord = () => {
           value={date}
           onChange={(e) => setDate(e.target.value)} // 更新日期
         />
-        <button className="btn btn-primary" onClick={fetchRecords}>
-          查询
+        <button className="btn btn-primary" onClick={fetchRecords} disabled={isLoading}>
+          {isLoading ? "查询中..." : "查询"}
         </button>
       </div>
 
