@@ -90,7 +90,7 @@ const MyHoldings = () => {
 
   return (
     <div className="container">
-      <h4>我的持仓</h4>
+      <h4>MyHoldings</h4>
 
       <div className="d-flex flex-column">
         <div className="input-group mb-2">
