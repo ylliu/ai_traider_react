@@ -77,12 +77,20 @@ const TradingRecord = () => {
     setSortConfig({ key, direction });
 
     const sortedRecords = [...records].sort((a, b) => {
-      if (a[key] < b[key]) {
-        return direction === "asc" ? -1 : 1;
+      // 特殊处理 rate 列排序
+      if (key === "rate") {
+        const aValue = a.close_price && a.price ? ((a.close_price - a.price) / a.price) * 100 : null; // 计算真实数值
+        const bValue = b.close_price && b.price ? ((b.close_price - b.price) / b.price) * 100 : null;
+
+        // 排序逻辑：N/A 视为最小值
+        if (aValue === null) return direction === "asc" ? -1 : 1;
+        if (bValue === null) return direction === "asc" ? 1 : -1;
+        return direction === "asc" ? aValue - bValue : bValue - aValue;
       }
-      if (a[key] > b[key]) {
-        return direction === "asc" ? 1 : -1;
-      }
+
+      // 处理其他列排序
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
       return 0;
     });
 
