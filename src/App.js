@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import AuthForm from "./component/AuthForm";  // 导入 Register 组件
 import MyHoldings from "./component/MyHoldings";  // 导入 MyHoldings 组件
 import TradingRecord from "./component/TradingRecord";  // 导入 TradingRecord 组件
+import DailyReturns from "./DailyReturns";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -44,6 +45,7 @@ const App = () => {
           
           {/* Trading Records 区域 */}
           <TradingRecord /> {/* 显示交易记录 TradingRecord 组件 */}
+          <DailyReturns /> {/* 显示日收益率 DailyReturns 组件 */}
         </div>
         
         {/* 右侧窗口，包含 MyHoldings 组件 */}
