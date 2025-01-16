@@ -10,6 +10,7 @@ const MonitorStocks = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);  // 新增监控状态
   const [isStopMonitoring, setIsStopMonitoring] = useState(false);  // 新增监控状态
   const [serverIp, setServerIp] = useState(null);
+  const [isSellOnly, setIsSellOnly] = useState(false); // 新增“只卖不买”状态
   const port = "5001";  // 替换为你的服务器端口
   const url = `http://${serverIp}:${port}`;
   const disappearTime = 1000;  // 提示消息自动消失时间
@@ -30,9 +31,58 @@ const MonitorStocks = () => {
     if (serverIp) { // 当 serverIp 不为 null 时调用 fetchStocks
       fetchStocks();
       fetchMonitoringStatus();
+      fetchSellOnlyStatus(); // 加载“只卖不买”状态
     }
   }, [serverIp]); // 依赖于 serverIp
   
+   // 获取当前“只卖不买”状态
+   const fetchSellOnlyStatus = async () => {
+    try {
+      const response = await fetch(`${url}/get_strategy_config`);
+      if (response.ok) {
+        const data = await response.json();
+        setIsSellOnly(data.isSellOnly); // 假设后端返回的字段名为 isSellOnly
+      } else {
+        setAlertMessage("获取策略配置失败。");
+        setAlertType("danger");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      }
+    } catch (error) {
+      console.error("Error fetching sell-only status:", error);
+      setAlertMessage("获取策略配置时出错。");
+      setAlertType("danger");
+      setTimeout(() => setAlertMessage(""), disappearTime);
+    }
+  };
+
+  // 更新“只卖不买”配置
+  const handleSellOnlyToggle = async () => {
+    const newSellOnlyStatus = !isSellOnly; // 切换状态
+    setIsSellOnly(newSellOnlyStatus); // 更新本地状态
+
+    try {
+      const response = await fetch(`${url}/strategy_config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSellOnly: newSellOnlyStatus }), // 发送新状态
+      });
+      if (response.ok) {
+        setAlertMessage("策略配置更新成功！");
+        setAlertType("success");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      } else {
+        setAlertMessage("策略配置更新失败！");
+        setAlertType("danger");
+        setTimeout(() => setAlertMessage(""), disappearTime);
+      }
+    } catch (error) {
+      console.error("Error updating strategy config:", error);
+      setAlertMessage("更新策略配置时出错。");
+      setAlertType("danger");
+      setTimeout(() => setAlertMessage(""), disappearTime);
+    }
+  };
+
    // 获取当前监控状态
    const fetchMonitoringStatus = async () => {
     try {
@@ -219,6 +269,19 @@ const MonitorStocks = () => {
             {isProcessing ? "添加中..." : "添加监控"}
           </button>
         </div>
+      </div>
+      {/* 策略配置 */}
+      <div className="form-check form-switch mt-3">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="sellOnlySwitch"
+          checked={isSellOnly}
+          onChange={handleSellOnlyToggle} // 切换开关
+        />
+        <label className="form-check-label" htmlFor="sellOnlySwitch">
+          只卖不买
+        </label>
       </div>
        {/* 开始监控和结束监控按钮 */}
         <div className="col-md-12 mt-2 d-flex justify-content-start">
